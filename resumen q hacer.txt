@@ -1,0 +1,25 @@
+*archivo debe tener 60+ personajes								(LISTO, quizas haga un archivo propio)
+*guardianes tienen: nombre, tipo(mago-vikingo-nigromante-bestia), vida, ataque, defensa		(LISTO)
+*armar los mazos del jugador y cpu
+*hacer q jugador y cpu elijan 3 cartas
+*dejar 12 cartas restantes en pila
+*jugadores 5 puntas de vida -1 al perder un guardian
+*opciones de juego: seleccionar carta y dejar en campo, atacar a oponente con carta en campo.
+*calculo de daño: (ataque jugador) - (defensa oponente)
+*si la resta es <= 0, -1 al oponente?
+*repetir hasta q un jugador pierda sus 5 puntos
+*crear estructura guardian e historial								(LISTO guardian, falta historial)
+*ser capaz de leer archivo externo								(LISTO, falta validar cuando esto no se cumple)
+*HACER MENU: permitir crear cartas nuevas, comenzar juego, HISTORIAL DE PARTIDA, salir
+*considerar maximos y minimos al momento de crear cartas
+*la cpu debe tener mas probabilidad de atacar que de colocar cartas en el campo
+*la cpu debe atacar al guardian que mas posibilidad tiene de vencer
+*al finalizar se debe mostrar cuantos puntos de vida le quedaron a los jugadores
+*el historial debe mostrar el resumen de la ultima partida jugada
+
+respecto a video:
+*no mas de 5 minutos
+*material de apoyo
+*mencionar problema a resolver
+*exponer lo mas clave del programa, estructuras, tipos de lista, funciones mas importantes
+*mostrar parte de la jugabilidad
