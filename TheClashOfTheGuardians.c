@@ -20,32 +20,45 @@ Guardian* remove_guardian(Guardian **head, Guardian **tail, int pos);
 int get_list_size(Guardian *head);
 void free_guardians(Guardian *head);
 void print_guardians(Guardian *head);
-void read_file(char *file_name, Guardian **head, Guardian **tail, int min[], int max[]);
+int read_file(char *file_name, Guardian **head, Guardian **tail, int min[], int max[]);
 Guardian* create_card(int min[], int max[]);
-//void suffle_deck(Guardian **head, Guardian **tail, Guardian **deck_head, Guardian **deck_tail);
+void shuffle_deck(Guardian **head, Guardian **tail, Guardian **deck_head, Guardian **deck_tail);
+Guardian* pop_guardian(Guardian **head_stack, Guardian **tail_stack);
+Guardian* dequeue_guardian(Guardian **head_queue);
+void list_to_list(Guardian **deck_head, Guardian **deck_tail, Guardian **hand_head, Guardian **hand_tail, int pos);
+void attack_guardian(Guardian **defeated_head, Guardian **defeated_tail, Guardian *defender_head, Guardian *defender_tail, Guardian *attacker, int *defender_health, int pos);
+void start_fight(Guardian **jg_deck, Guardian **jg_tail, Guardian **cpu_deck, Guardian **cpu_tail, Guardian **list_head, Guardian **list_tail);
 
 int main(int argc, char *argv[])
 {
 	if (argc < 2)
 	{
-		printf("Usage: %s guardians.txt",argv[0]);
+		printf("Uso: %s <nombre_archivo>.txt\n",argv[0]);
 		return 1;
-	}	
+	}
 	// find way to validate when file data is not separated by ","
-	
 	Guardian *head = NULL;
 	Guardian *tail = NULL;
 	Guardian *deck_head = NULL;
 	Guardian *deck_tail = NULL;
+	Guardian *cpu_head = NULL;
+	Guardian *cpu_tail = NULL;
 	int minStats[3] = {5000,5000,5000}, maxStats[3] = {0,0,0};
-	read_file(argv[1], &head, &tail, minStats, maxStats);
+	int error = read_file(argv[1], &head, &tail, minStats, maxStats);
+	
+	if (error == 1)
+	{
+		printf("Error: Separe Datos de Archivo con Comas\n");
+		return 2;
+	}
+	
 	
 	int election,elim;
 	Guardian *newGuardian = malloc(sizeof(Guardian)), *removedGuardian = malloc(sizeof(Guardian));
 	
 	do{
 		printf("----Menu Provisional----\n");
-		printf("[1] Crear Carta\n[2] Ver Guardianes\n[3] Probar ELiminar\n[4] Crear Mazo\n[5] Salir\n");
+		printf("[1] Crear Carta\n[2] Ver Guardianes\n\n[3] Iniciar Pelea\n[4] Salir\n");
 		printf("Eleccion: ");
 		scanf("%d",&election);
 		
@@ -58,26 +71,25 @@ int main(int argc, char *argv[])
 				
 			case 2:
 				print_guardians(head);
+				printf("tamano: %d",get_list_size(head));
 				break;
 				
 			case 3:
-				printf("donde: ");
-				scanf("%d",&elim);
-				removedGuardian =remove_guardian(&head,&tail,elim);
-				printf("%s | %s | %d | %d | %d\n",removedGuardian->name,removedGuardian->type,removedGuardian->health,removedGuardian->attack,removedGuardian->defense);
-				break;
-				
-			case 4:
-				//shuffle_deck(&head,&tail,&deck_head,&deck_tail);
+				shuffle_deck(&head,&tail,&deck_head,&deck_tail);
+				printf("MAZO JUGADOR\n");
 				print_guardians(deck_head);
+				shuffle_deck(&head,&tail,&cpu_head,&cpu_tail);
+				printf("\n\nMAZO CPU\n");
+				print_guardians(cpu_head);
+				start_fight(&deck_head, &deck_tail, &cpu_head, &cpu_tail, &head, &tail);
 				break;
 			
-			case 5:
+			case 4:
 				printf("BUH-BYE!\n");
 				free_guardians(head);
 				break;
 		}
-	} while (election != 5);
+	} while (election != 4);
 	return 0;
 }
 
@@ -126,20 +138,29 @@ Guardian* remove_guardian(Guardian **head, Guardian **tail, int pos)
 	}
 	
 	if (prev != NULL && current->next != NULL) // middle element
-	{
 		prev->next = current->next;
-	}
 	else if (current->next == NULL) // end element
 	{
 		prev->next = NULL;
 		*tail = prev;
 	}
 	else // starting element
-	{
 		*head = current->next;
-	}
 	
 	current->next = NULL;
+	return current;
+}
+
+Guardian* see_guardian(Guardian *head, int pos)
+{
+	Guardian *current = head;
+	
+	while (pos != 1)
+	{
+		current = current->next;
+		pos--;
+	}
+	
 	return current;
 }
 
@@ -154,7 +175,6 @@ int get_list_size(Guardian* head)
 		current = current->next;
 		count++;
 	}
-	
 	return count;
 }
 
@@ -174,7 +194,7 @@ void free_guardians(Guardian *head)
 void print_guardians(Guardian *head)
 {
 	Guardian *current = head;
-	int count=0;
+	int count=1;
 	while (current != NULL)
 	{
 		printf("%d) %s | %s | %d | %d | %d\n",count, current->name, current->type, current->health, current->attack, current->defense);
@@ -184,20 +204,24 @@ void print_guardians(Guardian *head)
 }
 
 // reads .txt files separated by commas
-void read_file(char *file_name, Guardian **head, Guardian **tail, int min[], int max[])
+int read_file(char *file_name, Guardian **head, Guardian **tail, int min[], int max[])
 {
 	FILE *file = fopen(file_name, "r");
 	char line[100];
+	int data_chunk = 0;
 	
 	while (fgets(line, 100, file) != NULL)
 	{
-		char *token;
-		token = strtok(line, ",");
+		if (strchr(line, ',') == NULL)
+			return 1;
 		
+		char *token;
+		
+		token = strtok(line, ",");
 		char name[50];
 		strcpy(name, token);
-		token = strtok(NULL, ",");
 		
+		token = strtok(NULL, ",");
 		char type[11];
 		strcpy(type, token);
 		
@@ -226,6 +250,8 @@ void read_file(char *file_name, Guardian **head, Guardian **tail, int min[], int
 	printf("hp: %d - %d | atk: %d - %d | def: %d - %d\n",min[0],max[0],min[1],max[1],min[2],max[2]);
 	
 	fclose(file);
+	
+	return 0;
 }
 
 // lets user create a guardian card
@@ -264,17 +290,17 @@ Guardian* create_card(int min[], int max[])
 	}
 	
 	do{
-		printf("Puntos de Vida de Guardian: ");
+		printf("Puntos de Vida (%d - %d) de Guardian: ",min[0],max[0]);
 		scanf("%d",&hp);
 	} while (hp < min[0] || hp > max[0]);
 	
 	do{
-		printf("Puntos de Ataque de Guardian: ");
+		printf("Puntos de Ataque (%d - %d) de Guardian: ",min[1],max[1]);
 		scanf("%d",&atk);
 	} while (atk < min[1] || atk > max[1]);
 	
 	do{
-		printf("Puntos de Defensa de Guardian: ");
+		printf("Puntos de Defensa (%d - %d) de Guardian: ",min[2],max[2]);
 		scanf("%d",&def);
 	} while (def < min[2] || def > max[2]);
 	
@@ -282,8 +308,7 @@ Guardian* create_card(int min[], int max[])
 }
 
 // gives 15 random cards to target
-/*
-void suffle_deck(Guardian **head, Guardian **tail, Guardian **deck_head, Guardian **deck_tail)
+void shuffle_deck(Guardian **head, Guardian **tail, Guardian **deck_head, Guardian **deck_tail)
 {
 	srand(time(NULL));
 	Guardian *decked_guardian = malloc(sizeof(Guardian));
@@ -295,4 +320,249 @@ void suffle_deck(Guardian **head, Guardian **tail, Guardian **deck_head, Guardia
 		decked_guardian = remove_guardian(head,tail,pos);
 		add_guardian(deck_head,deck_tail,decked_guardian);
 	}
-}*/
+}
+
+// remove guardian from stack
+Guardian* pop_guardian(Guardian **head_stack, Guardian **tail_stack)
+{
+	if (*head_stack == NULL)
+		return NULL;
+	else
+	{
+		Guardian *current = *head_stack;
+		Guardian *prev = NULL;
+		
+		while (current->next != NULL)
+		{
+			prev = current;
+			current = current->next;
+		}
+		
+		if (prev != NULL)
+			prev->next = NULL;
+			
+		*tail_stack = prev;
+		
+		return current;
+	}
+}
+
+// remove guardian from queue
+Guardian* dequeue_guardian(Guardian **head_queue)
+{
+	if (*head_queue == NULL)
+		return NULL;
+	else
+	{
+		Guardian *dequeued = *head_queue;
+		*head_queue = dequeued->next;
+		
+		dequeued->next = NULL;
+		return dequeued;
+	}
+}
+
+// interchanges guardians from one list to another
+void list_to_list(Guardian **deck_head, Guardian **deck_tail, Guardian **hand_head, Guardian **hand_tail, int pos)
+{
+	Guardian *popped_guardian = malloc(sizeof(Guardian));
+	if (pos == -1)
+		popped_guardian = pop_guardian(deck_head,deck_tail);
+	else
+		popped_guardian = remove_guardian(deck_head,deck_tail,pos);
+		
+	add_guardian(hand_head,hand_tail,popped_guardian);
+}
+
+// attacks guardian and sends it to the defeated list if its health reaches zero
+void attack_guardian(Guardian **defeated_head, Guardian **defeated_tail, Guardian *defender_head, Guardian *defender_tail, Guardian *attacker, int *defender_health, int pos)
+{
+	Guardian *defender = defender_head;
+	int defender_pos = pos;
+	while (pos != 1)
+	{
+		defender = defender->next;
+		defender_pos--;
+	}
+	
+	int damage = attacker->attack - defender->defense;
+	if (damage <= 0)
+		damage = 1;
+		
+	defender->health -= damage;
+	printf("%s Ataca a %s por %d Puntos de Vida\n", attacker->name, defender->name, damage);
+	
+	if (defender->health <= 0)
+	{
+		printf("%s ya no Puede Combatir\n", defender->name);
+		list_to_list(&defender_head,&defender_tail,defeated_head,defeated_tail,pos-1);
+		printf("lesgooo\n");
+		*defender_health--;
+	}
+}
+
+int look_by_stats(Guardian *head, int mode)
+{
+	Guardian *current = head;
+	int less_health = 5000, most_attack = 0, pos = 1, pos_selected = pos;
+	
+	switch (mode)
+	{
+		case 1: // less health
+			while (current != NULL)
+			{
+				if (current->health < less_health)
+				{
+					less_health = current->health;
+					pos_selected = pos;
+				}
+					
+				pos++;
+				current = current->next;
+			}
+			break;
+			
+		case 2: // most attack
+			while (current != NULL)
+			{
+				if (current->attack > most_attack)
+				{
+					most_attack = current->attack;
+					pos_selected = pos;
+				}
+				
+				pos++;
+				current = current->next;
+			}
+			break;
+		
+	}
+	
+	return pos_selected;
+}
+
+void start_fight(Guardian **jg_deck, Guardian **jg_tail, Guardian **cpu_deck, Guardian **cpu_tail, Guardian **list_head, Guardian **list_tail)
+{
+	srand(time(NULL));
+	Guardian *jg_hand = NULL, *jg_end = NULL, *jg_arena = NULL, *jg_arena_end = NULL;
+	Guardian *cpu_hand = NULL, *cpu_end = NULL, *cpu_arena = NULL, *cpu_arena_end = NULL;
+	Guardian *attacker = NULL, *defeated_head = NULL, *defeated_tail = NULL;
+	int jg_lives = 5, cpu_lives = 5;
+	int turn = 1, player_election, cpu_election, to_arena, to_attack, to_defend;
+	
+	while(get_list_size(jg_hand) < 3 && get_list_size(cpu_hand) < 3)
+	{
+		list_to_list(jg_deck,jg_tail,&jg_hand,&jg_end,-1);
+		list_to_list(cpu_deck,cpu_tail,&cpu_hand,&cpu_end,-1);
+	}
+	
+	do{
+		printf("----Turno %d----\n",turn);
+		printf("--Cartas En Campo--\n");
+		printf("Jugador:\n");
+		print_guardians(jg_arena);
+		printf("CPU:\n");
+		print_guardians(cpu_arena);
+		
+		
+		// player turn
+		if (cpu_arena != NULL && jg_arena != NULL)
+		{
+			printf("[1] Bajar Carta\n[2] Atacar\nEleccion: ");
+			scanf("%d",&player_election);
+		}
+		else
+			player_election = 1;	
+		
+		switch(player_election)
+		{	
+			case 1: // hand to arena
+				printf("---Elige Guardian a Bajar---\n");
+				print_guardians(jg_hand);
+				printf("Eleccion: ");
+				scanf("%d",&to_arena);
+				list_to_list(&jg_hand,&jg_end,&jg_arena,&jg_arena_end,to_arena-1);
+				break;
+				
+			case 2: // attack
+				printf("---Elige Guardian con Quien Atacar---\n");
+				print_guardians(jg_arena);
+				printf("Eleccion: ");
+				scanf("%d",&to_attack);
+				attacker = see_guardian(jg_arena, to_attack);
+				
+				printf("---Elige Guardian al Que Atacar---\n");
+				print_guardians(cpu_arena);
+				printf("Eleccion: ");
+				scanf("%d",&to_defend);
+				
+				attack_guardian(&defeated_head,&defeated_tail, cpu_arena, cpu_arena_end, attacker, &cpu_lives, to_defend);
+				break;
+		}
+		printf("\n");
+		// cpu turn
+		if (cpu_arena != NULL && jg_arena != NULL)
+		{
+			if (rand()%10 < 3)
+				cpu_election = 1;
+			else
+				cpu_election = 2;
+		}
+		else
+			cpu_election = 1;
+		
+		switch(cpu_election)
+		{
+			case 1: // hand to arena
+				printf("Rival Baja Guardian al Campo\n");
+				to_arena = rand()%get_list_size(cpu_hand);
+				list_to_list(&cpu_hand,&cpu_end,&cpu_arena,&cpu_arena_end,to_arena-1);
+				break;
+				
+			case 2: // attack
+				printf("Rival Ataca\n");
+				to_attack = look_by_stats(cpu_arena, 2);
+				attacker = see_guardian(cpu_arena, to_attack);
+				
+				to_defend = look_by_stats(jg_arena, 1);
+				attack_guardian(&defeated_head,&defeated_tail, jg_arena, jg_arena_end, attacker, &jg_lives, to_defend);
+				break;
+		}
+		printf("\n");
+		
+		if (turn < 13)
+		{
+			printf("Recogiendo Carta...\n");
+			list_to_list(jg_deck,jg_tail,&jg_hand,&jg_end,-1);
+			list_to_list(cpu_deck,cpu_tail,&cpu_hand,&cpu_end,-1);
+		}
+		turn++;
+		printf("\n\n");
+	} while (jg_lives > 0 && cpu_lives > 0);
+	
+	/*
+	while(get_list_size(jg_hand) > 0 || get_list_size(cpu_hand) > 0 || get_list_size(*jg_deck) > 0 || get_list_size(*jg_tail) > 0)
+	{
+		if (get_list_size(jg_hand) > 0)
+		{
+			printf("hi");
+			deck_to_hand(&jg_hand,&jg_end,list_head,list_tail);
+		}
+		if (get_list_size(cpu_hand) > 0)
+		{
+			printf("hi");
+			deck_to_hand(&cpu_hand,&cpu_end,list_head,list_tail);
+		}
+		if (get_list_size(*jg_deck) > 0)
+		{
+			printf("hi");
+			deck_to_hand(jg_deck,jg_tail,list_head,list_tail);
+		}
+		if (get_list_size(*cpu_deck) > 0)
+		{
+			printf("hi");
+			deck_to_hand(cpu_deck,cpu_tail,list_head,list_tail);
+		}
+		printf("\n");
+	}*/
+}
