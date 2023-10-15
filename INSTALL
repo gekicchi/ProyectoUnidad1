@@ -1,0 +1,5 @@
+1. Debe contar con el programa DEV-C++ 5.11
+2. Clone el repositorio en su computador
+3. Abra el archivo TheClashOfTheGuardians.c en DEV-C++
+4. En Execute -> Parameters, ingrese el archivo .txt con la información de las cartas
+5. Seleccione la opción Compile & Execute
