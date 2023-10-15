@@ -1,9 +1,29 @@
 # The Clash Of The Guardians
-## 1er commit
-por ahora la solución cuenta con la posibilidad de leer un archivo .txt separado por comas, además de las funciones básicas para trabajar con estructuras y listas (crear estructura, añadir estructura a lista, imprimir lista, liberación de memoria)
-## 2do commit
-ahora tiene tambien la función de permitir al jugador crear una carta, tomando en cuenta estadísticas mínimas y máximas sacadas del archivo, eliminar a guardián de lista, intenté hacer una función para barajar el mazo pero da errores extraños
-## 3er commit
-ahora se puede combatir contra la cpu, aunque al momento de derrotar a un guardian se producen errores en el orden de la lista. ademas el archivo de guardianes fue actualizado para tener los 60 guardianes minimos requeridos. el menu fue modificado para tener solo las funcionalidades pedidas
-## 4to commit
-el combate explota a veces al momento de atacar al rival, creo que es un problema con la lectura del tamaño de las listas, a parte de eso ahora se puede ver el historial luego de terminar una partida, tambien organize de mejor manera el orden de las funciones
+## Problema
+La creacion de un juego de cartas llamado "The Clash of the Guardians" con las funcionalidades minimas de:
+* Lectura de cartas desde archivo externo
+* Capacidad de crear cartas nuevas
+* Combatir contra la CPU
+* Ver el historial de movimientos de la ultima partida jugada
+## Solucion
+### 2 estructuras:
+* Guardian; con nombre, tipo, vida, ataque, defensa
+* Historial; con turno actual, vida de jugador y CPU y acciones realizadas
+### Listas:
+* Mazo general de +60 cartas
+* Cartas de los jugadores en la mano
+* Cartas de los jugadores en la arena
+### Cola:
+* Historial de movimientos
+### Pilas:
+* Mazo de los Jugadores
+* Copia de mazo de los jugadores
+### Funciones Importantes
+* copy_stats: copia estadisticas de un guardian y las transfiere a uno nuevo
+* list_to_list: mueve a guardian de una lista a otra
+* shuffle_deck: crea los mazos de los jugadores usando numeros aleatorios
+* look_by_stats: devuelve al guardian con mas ataque o menos vida
+* get_list_size: devuelve el tamaño de la lista ingresada
+* start_fight: donde ocurre la pelea en si, y donde se ocupan las anteriores funciones
+### Link para Video
+https://youtu.be/AKlgMF-9ahI
